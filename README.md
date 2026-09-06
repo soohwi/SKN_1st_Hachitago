@@ -15,7 +15,7 @@
 
 ### 2. 문제 정의 (Insight)
 
-장애인 콜택시는 수요 대비 공급의 한계로 인해 지역별·시간대별 배차 대기시간의 편차가 큽니다. 예측하기 힘든 대기시간은 병원 예약 시간 미준수, 불필요한 장시간 대기 등 장애인 이용자의 삶의 질 저하 및 의료 접근성 저해로 이어집니다.
+- 장애인 콜택시는 수요 대비 공급의 한계로 인해 지역별·시간대별 배차 대기시간의 편차가 큽니다. 예측하기 힘든 대기시간은 병원 예약 시간 미준수, 불필요한 장시간 대기 등 장애인 이용자의 삶의 질 저하 및 의료 접근성 저해로 이어집니다.
 
 ### 3. 해결 방안 (Solution)
 
@@ -32,10 +32,10 @@
 | 이름 | 역할 |
 |---|---|
 | 최우석 | PM(팀장) / 코드 검토 및 취합 / 배포 테스트 |
-| 박수휘 | Git 형상관리 / Streamlit 시각화 구현 / 이용현황 화면 구현 |
-| 심성욱 | 데이터 크롤링 / 수집 데이터 정제 / 관련 뉴스 화면 구현 / 발표 |
-| 이세희 | 데이터 크롤링 / Streamlit UI 설계 및 구현 / FAQ 화면 구현 |
-| 이형민 | API 데이터 정제 / 데이터베이스 스키마 설계 / 예약하기 화면 구현 |
+| 박수휘 | Git 형상관리 / 수집 데이터 기반 시각화 구현 |
+| 심성욱 | 데이터 크롤링 / 수집 데이터 정제 / 발표 |
+| 이세희 | 데이터 크롤링 / Streamlit UI 설계 및 구현 |
+| 이형민 | API 데이터 정제 / 데이터베이스 스키마 설계 |
 
 ## 시스템 구성도
 ![시스템 구성도](./docs/system_architecture.png)
@@ -92,77 +92,85 @@
 
 ## 폴더 구조
 
+src-layout 기준으로, 애플리케이션 코드는 `src/hachitago/` 패키지 안에 모아두고
+1회성 실행 스크립트는 `scripts/`로 분리했습니다.
+
 ```
-SKN35-1ST-1TEAM/
-├─ .env
-├─ .env.example
+SKN_1st_Hachitago/
+├─ .env.example                 # 실제 값은 .env로 복사해서 채움 (git 제외)
 ├─ .gitignore
 ├─ .python-version
-├─ config.py                    
-├─ main.py                      # 진입점, 페이지 라우팅
-├─ pyproject.toml               # uv 설정 정보
+├─ pyproject.toml               # uv 설정 정보 + 패키지 빌드 설정
 ├─ README.md
 ├─ uv.lock
-│  
+├─ main.py                      # 진입점, 페이지 라우팅
+│
 ├─.streamlit
 │      config.toml              # 테마 설정 (색상, 폰트)
-│      
-├─common                        # 공용 유틸 함수
-│  │  assets.py
-│  │  brand.py
-│  │  layout.py
-│  │  news_data.py
-│  │  styles.py
-│  └─ text.py
-│          
-├─crawler                       # 데이터 수집 모듈
-│      common.py
-│      faq_board_bs4.py
-│      faq_board_selenium.py
-│      guide_pages_bs4.py
-│      뉴스크롤링.ipynb
-│      
+│
+├─src
+│  └─hachitago                  # 애플리케이션 패키지
+│     │  __init__.py
+│     │  config.py              # 경로·DB접속·크롤링 대상 URL 설정
+│     │
+│     ├─common                  # 공용 유틸 함수
+│     │  │  __init__.py
+│     │  │  assets.py
+│     │  │  brand.py
+│     │  │  layout.py
+│     │  │  news_data.py
+│     │  │  styles.py
+│     │  └─ text.py
+│     │
+│     ├─crawler                 # 데이터 수집 모듈
+│     │      common.py
+│     │      faq_board_bs4.py
+│     │      faq_board_selenium.py
+│     │      guide_pages_bs4.py
+│     │      news_crawler_naver.ipynb
+│     │
+│     ├─db                      # DB 연결 및 조회 함수
+│     │      db.py
+│     │      loader.py
+│     │      repository.py
+│     │      schema.sql
+│     │
+│     └─views                   # 메뉴별 화면 페이지
+│        │  __init__.py
+│        │  faq.py
+│        │  home.py
+│        │  news.py
+│        │  placeholder.py
+│        │  reserve.py
+│        └─ useStatus.py
+│
+├─scripts                       # 1회성 실행 스크립트
+│      build_faq_dataset.py     # 전처리 파이프라인 (raw → processed)
+│      import_csv_to_db.py      # CSV → DB 적재
+│
 ├─data
-│  │  seoul_gu_boundary.json    # 서울 25개 자치구 경계 GeoJSON
-│  │  
 │  ├─processed                  # 전처리 데이터
 │  │      disability_news_20260727_165559.csv
 │  │      faq_clean.csv
 │  │      faq_keyword_clean.csv
 │  │      faq_source_clean.csv
 │  │      quality_report.json
-│  │      
-│  └─raw                        # 수집 데이터
+│  │
+│  └─raw                        # 수집 데이터 · 참조용 원본 데이터
 │          faq_board_raw.json
 │          faq_board_selenium.json
 │          faq_guide_raw.json
-│          
-├─db                            # DB 연결 및 조회 함수
-│  │  db.py
-│  │  loader.py
-│  │  repository.py
-│  └─ schema.sql
-│          
+│          seoul_gu_boundary.json   # 서울 25개 자치구 경계 GeoJSON
+│
 ├─docs
 │      system_architecture.png  # 시스템 아키텍쳐
-│      
-├─preprocess                    # 전처리 코드 (faq)
-│      build_faq_dataset.py
-│      
-├─style                         # 화면 css 스타일
-│      faq.css
-│      home.css
-│      news.css
-│      style.css
-│      useStatus.css
-│      
-├─views                         # 메뉴별 화면 페이지
-│  │  faq.py
-│  │  home.py
-│  │  news.py
-│  │  placeholder.py
-│  │  reserve.py
-│  └─ useStatus.py
+│
+└─style                         # 화면 css 스타일
+        faq.css
+        home.css
+        news.css
+        style.css
+        useStatus.css
 ```
 ## 데이터 출처
 
